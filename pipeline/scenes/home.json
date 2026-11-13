@@ -1,0 +1,14 @@
+{
+  "scene": "Front yard", "panel": "tl", "tagline": "Home zones  ·  people, vehicles and pets",
+  "zones": [
+    {"name": "Driveway", "kind": "entry", "target": "vehicle", "anchor": "center", "seconds": 0.3, "latch": 0.5, "level": "notice",
+     "on_text": "VEHICLE", "object_label": "VEHICLE", "event_text": "vehicle arrived", "label_at": [1570, 196],
+     "poly": [[1185, 95], [1560, 150], [1750, 470], [1920, 760], [1920, 1100], [1392, 1100], [1310, 650], [1235, 300]]},
+    {"name": "Lawn", "kind": "entry", "target": "pet", "anchor": "center", "seconds": 0.4, "latch": 0.5, "level": "info",
+     "on_text": "PET · NO ALERT", "object_label": "PET · IGNORED", "event_text": "pet on lawn, no alert", "label_at": [560, 300],
+     "poly": [[150, 240], [1185, 195], [1235, 300], [1310, 650], [1392, 1100], [480, 1100], [560, 800], [520, 560], [300, 440], [40, 470], [40, 330]]},
+    {"name": "Front path", "kind": "entry", "target": "person", "anchor": "center", "seconds": 0.35, "latch": 2.0, "level": "alert",
+     "on_text": "PERSON", "object_label": "PERSON DETECTED", "event_text": "person approaching the door",
+     "poly": [[40, 470], [300, 440], [520, 560], [560, 800], [480, 1100], [40, 1100]]}
+  ]
+}

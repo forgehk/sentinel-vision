@@ -1,0 +1,13 @@
+{
+  "name": "sentinel-vision-site-src",
+  "private": true,
+  "scripts": {
+    "build": "esbuild scene3d.js --bundle --minify --format=esm --target=es2019 --outfile=../site/scene3d.js"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

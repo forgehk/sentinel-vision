@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+app/build/
+app/dist/
+app/logs/
+app/sentinel.log
+app/zones/custom_*.json
+site/.netlify/
