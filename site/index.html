@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel Vision | Camera analytics for desks, shop floors and front doors</title>
+<meta name="description" content="Sentinel Vision runs on your own hardware and turns camera footage into plain, timestamped statuses: who is at their desk, which zone is over capacity, who is at the front door. People are counted, never identified. The detection and pose models run in your browser on the page.">
+<meta name="theme-color" content="#0e2a21">
+<link rel="canonical" href="https://sentinel-vision-demo.netlify.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sentinel Vision">
+<meta property="og:title" content="Sentinel Vision | Camera analytics for desks, shop floors and front doors">
+<meta property="og:description" content="Live status for every desk, zone and doorway your cameras can see. Runs on your own hardware. People are counted, never identified.">
+<meta property="og:image" content="https://sentinel-vision-demo.netlify.app/media/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Sentinel Vision home">
+      <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M14 2.5 24 8.25v11.5L14 25.5 4 19.75V8.25Z" stroke="#0e2a21" stroke-width="2.2" stroke-linejoin="round"/><path d="m9.2 14.3 3.4 3.4 6.2-7" stroke="#1b8a4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sentinel Vision
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="#statuses">What it reports</a>
+      <a href="#floors">Where it works</a>
+      <a href="#engine">Under the hood</a>
+      <a href="#deployment">Deployment</a>
+      <a class="button" href="#contact">Request a demo</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-cam" id="heroCam" aria-hidden="true"><canvas></canvas></div>
+    <div class="wrap hero-top">
+      <h1 id="headline">Live status for every desk, zone and doorway your cameras can see.</h1>
+      <div class="hero-side">
+        <p>Sentinel Vision runs on your own hardware and turns the footage you already record into plain, timestamped statuses. People are counted, never identified.</p>
+        <div class="hero-actions">
+          <a class="button" href="#contact">Request a demo</a>
+          <a class="button quiet" href="#engine">Run the detector yourself</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo" id="demo">
+      <div class="wrap">
+        <div class="scene-tabs" role="tablist" aria-label="Demo scene">
+          <button type="button" role="tab" aria-selected="true" data-scene="office">Office</button>
+          <button type="button" role="tab" aria-selected="false" data-scene="shop">Shop floor</button>
+          <button type="button" role="tab" aria-selected="false" data-scene="home">Front yard</button>
+          <button type="button" role="tab" aria-selected="false" data-scene="exam">Exam hall</button>
+        </div>
+        <div class="demo-grid">
+          <div class="player">
+            <div class="frame">
+              <video id="demoVideo" src="/media/office.mp4" poster="/media/office-poster.jpg" width="1920" height="1080" muted loop playsinline preload="metadata" aria-label="Overhead view of an office. Each desk is outlined and labelled with a status that changes as one person leaves and two others pick up their phones."></video>
+            </div>
+            <div class="transport">
+              <button type="button" id="playToggle" aria-label="Pause the demo">Pause</button>
+              <span class="timecode" id="timecode" aria-hidden="true">00:00.0</span>
+              <div class="scrub" aria-hidden="true">
+                <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div><span id="scrubMarks"></span></div>
+              </div>
+              <button type="button" id="soundToggle" hidden aria-pressed="false">Sound on</button>
+            </div>
+            <p class="demo-note">The scenes are simulated. The outlines and statuses in them are model output. Open Raw model output to read the detections for the frame on screen.</p>
+          </div>
+
+          <aside class="side" aria-label="Demo output">
+            <div class="side-tabs" role="tablist" aria-label="Output view">
+              <button type="button" role="tab" aria-selected="true" data-view="events">Event log</button>
+              <button type="button" role="tab" aria-selected="false" data-view="raw">Raw model output</button>
+            </div>
+            <div class="side-panel" data-view="events">
+              <ol class="log" id="eventLog">
+                <li data-t="1.0" data-kind="info"><time>00:01.0</time><div><strong>Six desks mapped</strong><span>Seats learned from the first second of video.</span></div></li>
+                <li data-t="4.79" data-kind="alert" data-mark><time>00:04.8</time><div><strong>ID 1 away from desk</strong><span>Seat empty for three quarters of a second.</span></div></li>
+                <li data-t="7.04" data-kind="alert" data-mark><time>00:07.0</time><div><strong>ID 6 phone in hand</strong><span>Phone detected inside the person's outline.</span></div></li>
+                <li data-t="8.46" data-kind="alert" data-mark><time>00:08.5</time><div><strong>ID 4 phone in hand</strong><span>Phone detected inside the person's outline.</span></div></li>
+              </ol>
+              <p class="side-foot">The same events export as CSV or JSON.</p>
+            </div>
+            <div class="side-panel" data-view="raw" hidden>
+              <table class="raw" aria-live="off">
+                <thead><tr><th scope="col">Class</th><th scope="col">Conf.</th><th scope="col">Box, pixels</th></tr></thead>
+                <tbody id="rawRows"><tr><td colspan="3">Loading detections…</td></tr></tbody>
+              </table>
+              <p class="side-foot" id="rawMeta">Frame 1</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="statuses">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What it reports</h2>
+        <p>Three desk statuses. Each is a single rule applied to what the detector found in the frame.</p>
+      </div>
+      <div class="statuses">
+        <article class="status" data-state="ok">
+          <figure class="reveal"><img src="/media/at-desk.jpg" width="720" height="540" loading="lazy" alt="A person typing at a desk, outlined in green and labelled Working."></figure>
+          <h3>Working</h3>
+          <p>Someone is in the seat and there is no phone in their hands. It says the person is present. It says nothing about their output.</p>
+          <p class="rule">A person is detected inside the seat's outline.</p>
+        </article>
+        <article class="status" data-state="alert">
+          <figure class="reveal"><img src="/media/away.jpg" width="720" height="540" loading="lazy" alt="An empty office chair outlined in red and labelled Absent, while the desks around it stay green."></figure>
+          <h3>Absent</h3>
+          <p>The seat has been empty long enough to rule out a detector blink. It stays marked until someone sits back down.</p>
+          <p class="rule">No person in the seat for 0.75 seconds. Clears after 0.4 seconds back.</p>
+        </article>
+        <article class="status" data-state="alert">
+          <figure class="reveal"><img src="/media/phone.jpg" width="720" height="540" loading="lazy" alt="A person holding a phone, outlined in red and labelled Phone usage, with the phone itself boxed in amber."></figure>
+          <h3>Phone usage</h3>
+          <p>A phone is in the person's hands. Phones lying on the desk are ignored, including the one that was just picked up.</p>
+          <p class="rule">A phone is detected inside the person's outline, away from where phones were resting, for 0.35 seconds.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section steps-band" id="how">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>Four steps from footage to a log you can review. Nothing is installed on the cameras and nothing is labelled by hand.</p>
+      </div>
+      <ol class="steps">
+        <li><h3>Point it at footage</h3><p>Give it a recorded clip or a live camera feed from the cameras you already have.</p></li>
+        <li><h3>It maps the floor</h3><p>In the first second it finds everyone who is seated and marks each seat. For doors, shelves and driveways, you draw the zones.</p></li>
+        <li><h3>It watches for change</h3><p>A detector finds people, phones, vehicles and pets in every frame, and a pose model finds which way each head is turned. Fixed rules turn those detections into statuses.</p></li>
+        <li><h3>You review</h3><p>Each change lands in a timestamped log. Jump to the moment, mark it reviewed, export it. Nothing is acted on automatically.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="floors3d" id="floors">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Where it works</h2>
+        <p>One engine covers five kinds of floor. You draw a zone on the camera view, pick a rule and set its threshold.</p>
+      </div>
+      <div class="floors-grid">
+        <div class="stage-col">
+          <div class="stage" id="stage" role="img" aria-label="A rotating 3D model that shows an office, a shop floor, a plant floor and a house in turn, each with outlined zones and status labels.">
+            <canvas></canvas>
+            <div class="stage-labels" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="floor-steps">
+          <article class="floor-step">
+            <h3>Offices</h3>
+            <dl>
+              <dt>Desk occupancy</dt><dd>Which seats are filled right now, and which have emptied.</dd>
+              <dt>Phone in hand</dt><dd>A phone being held, as opposed to one lying on the desk.</dd>
+              <dt>Walk-throughs</dt><dd>People crossing the floor are counted separately from people at desks.</dd>
+            </dl>
+          </article>
+          <article class="floor-step">
+            <h3>Shop floors</h3>
+            <dl>
+              <dt>Restricted areas</dt><dd>Someone stepping into a stockroom or staff-only doorway.</dd>
+              <dt>Dwell at a display</dt><dd>A person standing at a shelf or cabinet past a time you set.</dd>
+              <dt>Queue length</dt><dd>More people at the checkout than your limit, held for a moment.</dd>
+            </dl>
+          </article>
+          <article class="floor-step">
+            <h3>Exam halls</h3>
+            <dl>
+              <dt>Head direction</dt><dd>How far each candidate's head has turned from where it started, in degrees.</dd>
+              <dt>Whose desk</dt><dd>Which desk the head is pointing at, and for how long.</dd>
+              <dt>Phones</dt><dd>A phone at a desk raises a flag for an invigilator to check.</dd>
+            </dl>
+          </article>
+          <article class="floor-step">
+            <h3>Industrial sites</h3>
+            <dl>
+              <dt>Exclusion zones</dt><dd>A person inside the marked area around machinery.</dd>
+              <dt>Corridor occupancy</dt><dd>Too many people in a walkway at the same time.</dd>
+              <dt>Movement heatmaps</dt><dd>Where people spent time across the footage, without tracking who.</dd>
+            </dl>
+          </article>
+          <article class="floor-step">
+            <h3>Homes</h3>
+            <dl>
+              <dt>Front door</dt><dd>A person on the path to the door raises an alert within half a second.</dd>
+              <dt>Driveway</dt><dd>A vehicle pulling in is logged as a notice and raises no alarm.</dd>
+              <dt>Pets</dt><dd>Dogs and cats are recognised and left out of the alerts.</dd>
+            </dl>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section engine" id="engine">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Under the hood</h2>
+        <p>The models behind the demos are on this page. Pick one and press the button. It downloads to your browser and runs on your device, and nothing you give it is uploaded.</p>
+      </div>
+
+      <div class="try">
+        <div class="try-view">
+          <canvas id="tryCanvas" width="1280" height="720" role="img" aria-label="Sample camera frame. Detections are drawn on it after you run the detector."></canvas>
+        </div>
+        <div class="try-side">
+          <div class="model-pick" role="group" aria-label="Choose a model">
+            <button type="button" data-model="objects" aria-pressed="true">Objects<small>YOLO26n, 10 MB</small></button>
+            <button type="button" data-model="pose" aria-pressed="false">Body pose<small>YOLO26n-pose, 12 MB</small></button>
+          </div>
+          <div class="try-samples" role="group" aria-label="Choose an image">
+            <button type="button" class="sample" data-sample="/media/frame-shop.jpg" aria-pressed="true"><img src="/media/frame-shop.jpg" alt="" width="160" height="90" loading="lazy">Shop floor</button>
+            <button type="button" class="sample" data-sample="/media/frame-office.jpg" aria-pressed="false"><img src="/media/frame-office.jpg" alt="" width="160" height="90" loading="lazy">Office</button>
+            <button type="button" class="sample" data-sample="/media/frame-home.jpg" aria-pressed="false"><img src="/media/frame-home.jpg" alt="" width="160" height="90" loading="lazy">Front yard</button>
+            <button type="button" class="sample" data-sample="/media/frame-exam.jpg" aria-pressed="false"><img src="/media/frame-exam.jpg" alt="" width="160" height="90" loading="lazy">Exam hall</button>
+          </div>
+          <label class="own-image">Or use a photo of your own <input type="file" id="tryFile" accept="image/*"></label>
+          <button type="button" class="button" id="tryRun">Run the detector</button>
+          <p class="try-status" id="tryStatus" role="status">The model is 10 MB and loads when you press the button.</p>
+          <table class="raw" id="tryTable" hidden>
+            <thead><tr><th scope="col">Class</th><th scope="col">Conf.</th><th scope="col">Box, pixels</th></tr></thead>
+            <tbody id="tryRows"></tbody>
+          </table>
+          <p class="try-foot">These are the nano models, chosen so they load quickly. The demo clips above were analysed with the large ones, which find smaller objects such as phones and place keypoints more steadily.</p>
+        </div>
+      </div>
+
+      <dl class="facts">
+        <div><dt>Models</dt><dd>YOLO26 from Ultralytics. Detection comes in three sizes: nano (9.9 MB) for live use and this page, small (38 MB) when accuracy matters more than speed, large for offline analysis. YOLO26 pose adds 17 body keypoints per person.</dd></div>
+        <div><dt>Runtime</dt><dd>ONNX Runtime. Native on your server, with an NVIDIA GPU if you have one, and WebAssembly inside this page.</dd></div>
+        <div><dt>Speed, measured</dt><dd><span class="count" data-to="68">68</span> ms a frame for nano and 208 ms for small at 640 px, on a 2-core Xeon cloud CPU with no GPU. Large at 1280 px takes about 2 seconds a frame on the same machine.</dd></div>
+        <div><dt>The demo run</dt><dd><span class="count" data-to="964">964</span> frames analysed with the large models. <span class="count" data-to="7068">7,068</span> detections kept above 25% confidence, <span class="count" data-to="41801">41,801</span> body keypoints and 13 status changes logged.</dd></div>
+        <div><dt>Rules</dt><dd>Zone entry, dwell, occupancy limits, seat absence, phone in hand, head turn and gaze target. <span class="count" data-to="41">41</span> automated tests cover them.</dd></div>
+        <div><dt>Check it</dt><dd>Download the raw detections behind each clip: <a href="/data/office.json" download>office</a>, <a href="/data/shop.json" download>shop floor</a>, <a href="/data/home.json" download>front yard</a>, <a href="/data/exam.json" download>exam hall</a>.</dd></div>
+      </dl>
+
+      <div class="evidence">
+        <figure>
+          <figcaption>The zone file for the shop-floor clip, as written</figcaption>
+<pre tabindex="0"><code>{ "name": "Aisle 1", "kind": "dwell", "seconds": 5,
+  "poly": [[300,470],[470,455],[600,680],[330,720]] },
+
+{ "name": "Checkout queue", "kind": "occupancy",
+  "limit": 3, "hold": 0.6,
+  "poly": [[980,760],[1215,700],[1920,1040],
+           [1920,1100],[980,1100]] },
+
+{ "name": "Stockroom door", "kind": "entry",
+  "seconds": 0.35, "latch": 2.5,
+  "poly": [[1352,235],[1622,262],[1612,640],[1350,625]] }</code></pre>
+        </figure>
+        <figure>
+          <figcaption>The run that produced that clip</figcaption>
+<pre tabindex="0"><code>$ python detect.py shop.mp4 detections.json --classes 0
+done 241 frames in 504s
+
+$ python zones_analyze.py detections.json scene.json states.json
+{'t': 3.83, 'zone': 'Stockroom door', 'level': 'alert', 'text': 'ENTRY'}
+{'t': 5.0,  'zone': 'Aisle 1', 'level': 'alert', 'text': 'DWELL 5.0s'}
+{'t': 7.83, 'zone': 'Stockroom door', 'level': 'ok', 'text': 'cleared'}
+{'t': 8.21, 'zone': 'Checkout queue', 'level': 'alert', 'text': '4 of 3 · OVER'}
+
+$ python -m unittest discover -s tests
+Ran 41 tests in 0.115s
+OK</code></pre>
+        </figure>
+        <figure>
+          <figcaption>The exam-hall thresholds, as written in exam_analyze.py</figcaption>
+<pre tabindex="0"><code>YAW_GATE = 38.0        # degrees off baseline before a look leaves own paper
+TARGET_TOL = 30.0      # most degrees allowed between head direction and a desk
+TARGET_RANGE = 7.0     # a desk must be within this many shoulder-widths
+SWITCH_MARGIN = 0.25   # cost gap another desk needs to take over as target
+LOOK_HOLD = 0.35       # seconds a look must last before it scores
+LOOK_RATE = 42.0       # risk per second while looking at another desk
+DECAY_RATE = 7.0       # risk per second while not
+PHONE_RISK = 85.0      # a phone at the desk lifts the score to this
+REVIEW_AT, REVIEW_OFF = 25.0, 12.0
+FLAG_AT, FLAG_OFF = 60.0, 45.0</code></pre>
+        </figure>
+        <figure>
+          <figcaption>The run that produced the exam-hall clip</figcaption>
+<pre tabindex="0"><code>$ python detect_pose.py exam.mp4 detections.json
+done 241 frames in 970s
+
+$ python exam_analyze.py detections.json states.json
+10 seats; 3 status changes
+   2.00s  S8  NORMAL -> REVIEW  (looking at desk S9, risk 26)
+   2.83s  S8  REVIEW -> FLAGGED  (looking at desk S9, risk 61)
+   4.71s  S9  NORMAL -> FLAGGED  (phone at the desk, risk 85)</code></pre>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section spec-band" id="deployment">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Deployment</h2>
+        <p>Sentinel Vision is software you run on your own machine. There is no cloud service behind it and no account to create.</p>
+      </div>
+      <dl class="spec">
+        <div><dt>Runs on</dt><dd>Your own computer or server. Footage is processed there and is not uploaded.</dd></div>
+        <div><dt>Identity</dt><dd>None. There is no face recognition, no names and no demographic guesses. Head direction comes from five keypoints on the head. Each person gets a number for the session, and it is dropped when they leave the frame.</dd></div>
+        <div><dt>Detects</dt><dd>People, phones, vehicles, dogs and cats. Where head direction matters, 17 body keypoints per person.</dd></div>
+        <div><dt>Input</dt><dd>Recorded video files and live camera feeds.</dd></div>
+        <div><dt>Output</dt><dd>Timestamped events as CSV and JSON, annotated video and movement heatmaps.</dd></div>
+        <div><dt>Retention</dt><dd>Generated clips and reports are deleted after 24 hours by default. You can shorten or extend that.</dd></div>
+        <div><dt>Decisions</dt><dd>None are automated. Every status is a prompt for a person to look.</dd></div>
+        <div><dt>Rules</dt><dd>Fixed and inspectable. Each alert states the zone, the threshold and the time it fired.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" id="use">
+    <div class="wrap use">
+      <h2>Responsible use</h2>
+      <div class="use-body">
+        <p>Sentinel Vision reports what a camera can see: presence, position and objects. It cannot see intent or effort.</p>
+        <p>"Working" means someone is at their desk. "Phone usage" means a phone is in their hands. Neither says why, and neither should be acted on without a person looking at the footage first.</p>
+        <p>In an exam hall, a flag means a head stayed turned toward another desk, or a phone appeared at a desk. It gives an invigilator a timestamp to check. Whether anything improper happened is for them to decide.</p>
+        <p>Tell the people in frame that the system is running and what it records, and follow the workplace-monitoring and privacy rules that apply where you operate.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section contact-band" id="contact">
+    <div class="wrap contact">
+      <div class="contact-intro">
+        <h2>Request a demo</h2>
+        <p>Tell us what you want to watch and where. We will reply to arrange a walkthrough.</p>
+      </div>
+      <form name="demo-request" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="website">
+        <input type="hidden" name="form-name" value="demo-request">
+        <p class="hp"><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></p>
+        <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required></div>
+        <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="f-company">Company</label><input id="f-company" name="company" autocomplete="organization" required></div>
+        <div class="field"><label for="f-floor">What you want to watch</label>
+          <select id="f-floor" name="floor" required>
+            <option value="" selected disabled>Choose one</option>
+            <option>Office desks</option>
+            <option>Shop floor</option>
+            <option>Exam hall</option>
+            <option>Industrial site</option>
+            <option>Home</option>
+            <option>Something else</option>
+          </select>
+        </div>
+        <div class="field full"><label for="f-message">Anything we should know <small>(optional)</small></label><textarea id="f-message" name="message"></textarea></div>
+        <div class="form-foot">
+          <button class="button" type="submit">Send request</button>
+          <p>We use these details only to reply to you.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M14 2.5 24 8.25v11.5L14 25.5 4 19.75V8.25Z" stroke="#0e2a21" stroke-width="2.2" stroke-linejoin="round"/><path d="m9.2 14.3 3.4 3.4 6.2-7" stroke="#1b8a4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sentinel Vision
+    </a>
+    <nav aria-label="Footer">
+      <a href="#statuses">What it reports</a>
+      <a href="#how">How it works</a>
+      <a href="#floors">Where it works</a>
+      <a href="#engine">Under the hood</a>
+      <a href="#deployment">Deployment</a>
+      <a href="#use">Responsible use</a>
+      <a href="#contact">Request a demo</a>
+    </nav>
+    <p class="fine">© 2026 Sentinel Vision. The scenes on this page are simulated. The detections and statuses shown in them are model output from Ultralytics YOLO26.</p>
+  </div>
+</footer>
+
+<div class="reticle" id="reticle" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
+
+<script src="/main.js" defer></script>
+<script type="module" src="/scene3d.js"></script>
+</body>
+</html>

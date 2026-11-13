@@ -1,0 +1,12 @@
+{
+  "scene": "Shop floor", "panel": "bl", "tagline": "Shop floor zones  ·  dwell, entry and queue length",
+  "zones": [
+    {"name": "Stockroom door", "kind": "entry", "anchor": "center", "seconds": 0.35, "latch": 2.5, "level": "alert",
+     "on_text": "ENTRY", "object_label": "RESTRICTED AREA", "event_text": "person entered",
+     "poly": [[1352, 235], [1622, 262], [1612, 640], [1350, 625]]},
+    {"name": "Aisle 1", "kind": "dwell", "seconds": 5, "event_text": "dwell over 5 seconds", "label_at": [448, 452],
+     "poly": [[300, 470], [470, 455], [600, 680], [330, 720]]},
+    {"name": "Checkout queue", "kind": "occupancy", "limit": 3, "hold": 0.6, "event_text": "4 in line, limit 3", "label_at": [770, 762],
+     "poly": [[980, 760], [1215, 700], [1920, 1040], [1920, 1100], [980, 1100]]}
+  ]
+}
