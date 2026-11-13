@@ -144,7 +144,7 @@
         <li><h3>Point it at footage</h3><p>Give it a recorded clip or a live camera feed from the cameras you already have.</p></li>
         <li><h3>It maps the floor</h3><p>In the first second it finds everyone who is seated and marks each seat. For doors, shelves and driveways, you draw the zones.</p></li>
         <li><h3>It watches for change</h3><p>A detector finds people, phones, vehicles and pets in every frame, and a pose model finds which way each head is turned. Fixed rules turn those detections into statuses.</p></li>
-        <li><h3>You review</h3><p>Each change lands in a timestamped log. Jump to the moment, mark it reviewed, export it. Nothing is acted on automatically.</p></li>
+        <li><h3>You review</h3><p>Each change lands in a timestamped log that you can export. Nothing is acted on automatically.</p></li>
       </ol>
     </div>
   </section>
@@ -192,7 +192,7 @@
             <dl>
               <dt>Exclusion zones</dt><dd>A person inside the marked area around machinery.</dd>
               <dt>Corridor occupancy</dt><dd>Too many people in a walkway at the same time.</dd>
-              <dt>Movement heatmaps</dt><dd>Where people spent time across the footage, without tracking who.</dd>
+              <dt>Movement heatmaps <span class="soon">In development</span></dt><dd>Where people spent time across the footage, without tracking who.</dd>
             </dl>
           </article>
           <article class="floor-step">
@@ -244,7 +244,7 @@
 
       <dl class="facts">
         <div><dt>Models</dt><dd>YOLO26 from Ultralytics. Detection comes in three sizes: nano (9.9 MB) for live use and this page, small (38 MB) when accuracy matters more than speed, large for offline analysis. YOLO26 pose adds 17 body keypoints per person.</dd></div>
-        <div><dt>Runtime</dt><dd>ONNX Runtime. Native on your server, with an NVIDIA GPU if you have one, and WebAssembly inside this page.</dd></div>
+        <div><dt>Runtime</dt><dd>ONNX Runtime. Native on your PC, on the graphics card through DirectX 12 when there is one, and WebAssembly inside this page.</dd></div>
         <div><dt>Speed, measured</dt><dd><span class="count" data-to="68">68</span> ms a frame for nano and 208 ms for small at 640 px, on a 2-core Xeon cloud CPU with no GPU. Large at 1280 px takes about 2 seconds a frame on the same machine.</dd></div>
         <div><dt>The demo run</dt><dd><span class="count" data-to="964">964</span> frames analysed with the large models. <span class="count" data-to="7068">7,068</span> detections kept above 25% confidence, <span class="count" data-to="41801">41,801</span> body keypoints and 13 status changes logged.</dd></div>
         <div><dt>Rules</dt><dd>Zone entry, dwell, occupancy limits, seat absence, phone in hand, head turn and gaze target. <span class="count" data-to="41">41</span> automated tests cover them.</dd></div>
@@ -360,6 +360,28 @@ $ python exam_analyze.py detections.json states.json
           <p class="app-note">The <a href="/docs/">documentation</a> covers the keys, the rules and their thresholds, and the model files.</p>
         </div>
       </div>
+      <div class="roadmap">
+        <div>
+          <h3>In version 0.1.0</h3>
+          <ul>
+            <li>Four programs: Office, Shop, Home and Exam</li>
+            <li>Webcam and video-file input</li>
+            <li>Zones you draw, with entry, dwell and occupancy rules</li>
+            <li>Event log as CSV, screenshots and annotated video</li>
+            <li>Runs on the graphics card through DirectX 12, or on the CPU</li>
+          </ul>
+        </div>
+        <div>
+          <h3>In development</h3>
+          <ul>
+            <li>A review screen: jump to an event, mark it checked, add a note</li>
+            <li>Movement heatmaps</li>
+            <li>IP cameras over RTSP</li>
+            <li>A retention timer for logs and clips</li>
+            <li>One program with an installer</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -373,9 +395,9 @@ $ python exam_analyze.py detections.json states.json
         <div><dt>Runs on</dt><dd>Your own computer or server. Footage is processed there and is not uploaded.</dd></div>
         <div><dt>Identity</dt><dd>None. There is no face recognition, no names and no demographic guesses. Head direction comes from five keypoints on the head. Each person gets a number for the session, and it is dropped when they leave the frame.</dd></div>
         <div><dt>Detects</dt><dd>People, phones, vehicles, dogs and cats. Where head direction matters, 17 body keypoints per person.</dd></div>
-        <div><dt>Input</dt><dd>Recorded video files and live camera feeds.</dd></div>
-        <div><dt>Output</dt><dd>Timestamped events as CSV and JSON, annotated video and movement heatmaps.</dd></div>
-        <div><dt>Retention</dt><dd>Generated clips and reports are deleted after 24 hours by default. You can shorten or extend that.</dd></div>
+        <div><dt>Input</dt><dd>Recorded video files and webcams. <span class="soon">In development</span> IP cameras over RTSP.</dd></div>
+        <div><dt>Output</dt><dd>Timestamped events as CSV and JSON, and annotated video. <span class="soon">In development</span> Movement heatmaps.</dd></div>
+        <div><dt>Retention</dt><dd>Logs and saved clips stay on your machine until you delete them. <span class="soon">In development</span> A timer that deletes them after 24 hours unless you change it.</dd></div>
         <div><dt>Decisions</dt><dd>None are automated. Every status is a prompt for a person to look.</dd></div>
         <div><dt>Rules</dt><dd>Fixed and inspectable. Each alert states the zone, the threshold and the time it fired.</dd></div>
       </dl>
@@ -420,7 +442,7 @@ $ python exam_analyze.py detections.json states.json
         <div class="field full"><label for="f-message">Anything we should know <small>(optional)</small></label><textarea id="f-message" name="message"></textarea></div>
         <div class="form-foot">
           <button class="button" type="submit">Send request</button>
-          <p>We use these details only to reply to you.</p>
+          <p>We use these details only to reply to you. <a href="/privacy/">Privacy</a></p>
         </div>
       </form>
     </div>
@@ -443,6 +465,7 @@ $ python exam_analyze.py detections.json states.json
       <a href="#deployment">Deployment</a>
       <a href="#use">Responsible use</a>
       <a href="#contact">Request a demo</a>
+      <a href="/privacy/">Privacy</a>
       <a href="https://github.com/forgehk/sentinel-vision">GitHub</a>
     </nav>
     <p class="fine">© 2026 Sentinel Vision. The scenes on this page are simulated. The detections and statuses shown in them are model output from Ultralytics YOLO26.</p>

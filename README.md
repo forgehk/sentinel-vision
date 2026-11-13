@@ -179,6 +179,16 @@ python -m unittest discover -s tests
 
 `app/tests/` has eight more for the live apps.
 
+## Roadmap
+
+Version 0.1.0 has the four programs, webcam and video-file input, zones you draw, a CSV event log and annotated video. In development:
+
+- A review screen: jump to an event, mark it checked, add a note
+- Movement heatmaps
+- IP cameras over RTSP
+- A retention timer for logs and clips
+- One program with an installer
+
 ## Licences
 
 - This repository is released under the GNU Affero General Public License v3.0. See `LICENSE`.

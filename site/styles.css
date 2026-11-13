@@ -267,6 +267,7 @@ html.no-webgl .floor-step { min-height: 0; opacity: 1; }
 .doc-body td:first-child { font-weight: 620; color: var(--spruce); white-space: nowrap; }
 .doc-body td code { background: none; padding: 0; }
 .doc-body .hash { font-family: var(--mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); overflow-wrap: anywhere; white-space: normal; }
+.doc-body .doc-date { margin-top: 56px; font-size: 0.875rem; color: var(--muted); }
 .doc-body kbd { font-family: var(--mono); font-size: 0.8125rem; font-weight: 600; color: var(--spruce); border: 1.5px solid var(--spruce); border-radius: 4px; padding: 1px 7px; background: var(--paper); }
 
 /* ---------- model files ---------- */
@@ -302,6 +303,21 @@ html.no-webgl .floor-step { min-height: 0; opacity: 1; }
 .app-meta code { font-family: var(--mono); font-size: 0.75rem; overflow-wrap: anywhere; color: var(--muted); }
 .app-note { margin-top: 18px; font-size: 0.9375rem; color: var(--muted); }
 .app-note a { color: var(--spruce); font-weight: 600; text-underline-offset: 3px; }
+
+/* a feature that is on the roadmap and not in the current release */
+.soon { display: inline-block; padding: 0 6px; border: 1.5px solid currentColor; border-radius: 3px; font-size: 0.6875rem; font-weight: 640; font-stretch: 100%; line-height: 1.55; color: var(--muted); vertical-align: 0.14em; white-space: nowrap; }
+dt .soon { margin-left: 6px; }
+dd .soon { margin-right: 4px; }
+.spec-band .soon { color: #a9bdb3; }
+
+.roadmap { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 72px; }
+.roadmap > div { border-top: 2px solid var(--spruce); padding-top: 18px; }
+.roadmap h3 { font-stretch: 112%; font-weight: 640; color: var(--spruce); font-size: 1.0625rem; }
+.roadmap ul { list-style: none; margin: 10px 0 0; padding: 0; }
+.roadmap li { padding: 11px 0; border-top: 1px solid var(--rule); font-size: 0.9375rem; }
+.roadmap li:first-child { border-top: 0; }
+.roadmap > div + div li { color: var(--muted); }
+.form-foot a, .site-footer a { text-underline-offset: 3px; }
 
 .spec-band { background: var(--spruce); color: #d6dfda; }
 .spec-band h2 { color: #fff; }
@@ -391,6 +407,7 @@ html.no-webgl .floor-step { min-height: 0; opacity: 1; }
   .doc-body { grid-column: 1 / -1; }
 }
 @media (max-width: 720px) {
+  .roadmap { grid-template-columns: 1fr; row-gap: 36px; }
   body { font-size: 1rem; }
   .site-header .wrap { min-height: 64px; gap: 16px; }
   .site-nav a:not(.button) { display: none; }
