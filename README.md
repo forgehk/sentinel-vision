@@ -68,7 +68,7 @@ Every renderer also takes `--layout vertical` for a 1080×1920 version and `--st
 
 `app/` holds four programs: Office, Shop, Home and Exam. Each opens a window, plays a raw sample clip and annotates it as it plays with the ONNX models in `app/models/`. One key switches to a webcam, another opens any video file.
 
-Each release carries a Windows build: one folder with four EXEs, the models and the sample clips. `.github/workflows/release.yml` produces it. On every push it runs the rule tests, builds the folder on a Windows machine, starts each EXE on its sample clip and fails unless the expected events are reported. A tag starting with `v` publishes the zip and its SHA-256. `app/build_exe.bat` does the same build on your own PC.
+Each release carries a Windows build: one folder with four EXEs, the models and the sample clips. `.github/workflows/release.yml` produces it. On every push it runs the rule tests, builds the folder on a Windows machine, starts each EXE on its sample clip and fails unless the expected events are reported. On `main`, when the version number in `app/sentinel_live.py` has no release yet, the same run publishes the zip and its SHA-256 as that release. `app/build_exe.bat` does the same build on your own PC.
 
 The live apps and the offline pipeline share one set of rules. `OfficeRules`, `ZoneRules` and `ExamRules` each take one frame of detections and the time since the last one. The batch scripts call them at the clip's frame rate. The apps call them at whatever rate the machine manages. After the rules were moved into these classes, all four demo clips were re-analysed and the output matched the earlier files exactly.
 

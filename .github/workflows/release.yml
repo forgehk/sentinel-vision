@@ -1,12 +1,11 @@
 name: Release
 
 # Every push: run the rule tests, build the Windows folder, start each program on its sample clip.
-# A tag that starts with v also publishes the zip and its checksum as a release.
+# On main, if the version in app/sentinel_live.py has no release yet, the zip and its checksum are published as one.
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -97,9 +96,14 @@ jobs:
             app/SentinelVision-windows-x64.zip
             app/SHA256SUMS.txt
 
-      - name: Publish the release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish the release if this version has none
+        if: github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create $env:GITHUB_REF_NAME SentinelVision-windows-x64.zip SHA256SUMS.txt --title "Sentinel Vision $($env:GITHUB_REF_NAME.TrimStart('v'))" --notes-file ..\RELEASE_NOTES.md
+        run: |
+          $version = (Select-String -Path sentinel_live.py -Pattern "^__version__ = '(.+)'").Matches[0].Groups[1].Value
+          $tag = "v$version"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) { "Release $tag already exists. Nothing to publish."; exit 0 }
+          gh release create $tag SentinelVision-windows-x64.zip SHA256SUMS.txt --target $env:GITHUB_SHA --title "Sentinel Vision $version" --notes-file ..\RELEASE_NOTES.md
