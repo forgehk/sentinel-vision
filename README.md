@@ -138,7 +138,8 @@ Use this server instead of `python -m http.server`. It answers range requests, w
 What the page does:
 
 - Plays the four clips with an event log, and a raw-output view that lists the detections for the frame on screen, read from `site/data/*.json`.
-- Runs YOLO26n (9.9 MB) or YOLO26n-pose (12.1 MB) in the visitor's browser with ONNX Runtime Web, on a sample frame or a photo they choose. The image is read from a canvas and passed to WebAssembly. Nothing is uploaded.
+- Runs YOLO26n (9.9 MB) or YOLO26n-pose (12.1 MB) in the visitor's browser with ONNX Runtime Web, on a sample frame, a photo they choose or their own camera. On the camera it runs every frame and applies the desk rule or the head-direction readout to the person in view. The picture is read from a canvas and passed to WebAssembly. Nothing is uploaded.
+- Offers the Windows build, with its size and SHA-256, and lists the four model files with their checksums. `site/docs/` is the documentation page.
 - Shows five floor models (office, shop, exam hall, plant, home) on a turntable that turns with the scroll, and a ceiling camera in the header that follows the pointer. Both are built from three.js primitives, so there are no model files to download.
 - Falls back to plain content without WebGL, and holds still when the visitor's system asks for reduced motion.
 

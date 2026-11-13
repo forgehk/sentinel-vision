@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation | Sentinel Vision</title>
+<meta name="description" content="How to run the Sentinel Vision Windows app: the four programs, the keys, the rules and their thresholds, the model files and their checksums.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Sentinel Vision home">
+      <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M14 2.5 24 8.25v11.5L14 25.5 4 19.75V8.25Z" stroke="#0e2a21" stroke-width="2.2" stroke-linejoin="round"/><path d="m9.2 14.3 3.4 3.4 6.2-7" stroke="#1b8a4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sentinel Vision
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="/#statuses">What it reports</a>
+      <a href="/#floors">Where it works</a>
+      <a href="/#engine">Under the hood</a>
+      <a href="/#app">Windows app</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a class="button" href="/#contact">Request a demo</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="doc">
+  <div class="wrap doc-grid">
+    <nav class="doc-toc" aria-label="On this page">
+      <ol>
+        <li><a href="#install">Download and run</a></li>
+        <li><a href="#programs">The four programs</a></li>
+        <li><a href="#keys">Keys</a></li>
+        <li><a href="#readout">The readout and the log</a></li>
+        <li><a href="#rules">Rules and thresholds</a></li>
+        <li><a href="#models">Model files</a></li>
+        <li><a href="#speed">Speed</a></li>
+        <li><a href="#source">Source and build</a></li>
+        <li><a href="#limits">Limits</a></li>
+        <li><a href="#licence">Licence</a></li>
+      </ol>
+    </nav>
+
+    <article class="doc-body">
+      <h1>Documentation</h1>
+      <p class="lede">Sentinel Vision for Windows, version 0.1.0. Four programs that run detection and pose models on a webcam or a video and turn what they find into statuses.</p>
+
+      <h2 id="install">Download and run</h2>
+      <ol>
+        <li>Download <a href="https://github.com/forgehk/sentinel-vision/releases/latest/download/SentinelVision-windows-x64.zip">SentinelVision-windows-x64.zip</a>.</li>
+        <li>Unzip it anywhere. Nothing is installed and nothing is written outside the folder.</li>
+        <li>Double-click <code>SentinelOffice.exe</code>, <code>SentinelShop.exe</code>, <code>SentinelHome.exe</code> or <code>SentinelExam.exe</code>.</li>
+      </ol>
+      <p>Each program starts on its sample clip. The clip has nothing drawn in it. The outlines and statuses are computed as it plays.</p>
+      <p>The programs are not code-signed, so Windows may ask before the first run. Choose "More info", then "Run anyway".</p>
+      <p>Keep the folder together. The programs read <code>models</code>, <code>samples</code>, <code>zones</code> and <code>fonts</code> at start and share the <code>_internal</code> folder. To use them on another PC, copy the whole folder.</p>
+      <p>It needs Windows 10 or 11, 64-bit. It runs on the CPU and uses a DirectX 12 graphics card when one is available.</p>
+
+      <h2 id="programs">The four programs</h2>
+      <table>
+        <thead><tr><th scope="col">Program</th><th scope="col">Reports</th><th scope="col">Models it loads</th></tr></thead>
+        <tbody>
+          <tr><td>SentinelOffice</td><td>Each seat as Working, Absent or Phone usage. Seats are learned from the first second.</td><td>Objects</td></tr>
+          <tr><td>SentinelShop</td><td>Zones you draw: someone entering, someone staying past a time, more people than a limit.</td><td>Objects</td></tr>
+          <tr><td>SentinelHome</td><td>Zones by what is in them: a person, a vehicle or a pet. Pets are recognised and raise no alert.</td><td>Objects</td></tr>
+          <tr><td>SentinelExam</td><td>Each candidate's head direction, the desk it points at, phones, and a risk score from 0 to 100.</td><td>Pose and objects</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="keys">Keys</h2>
+      <table>
+        <thead><tr><th scope="col">Key</th><th scope="col">Does</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>W</kbd></td><td>Webcam. Press again for the next camera.</td></tr>
+          <tr><td><kbd>O</kbd></td><td>Open a video file.</td></tr>
+          <tr><td><kbd>S</kbd></td><td>Back to the sample clip.</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Switch between the small model and the nano model.</td></tr>
+          <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Smaller or larger model input: 640, 960 or 1280 pixels.</td></tr>
+          <tr><td><kbd>R</kbd></td><td>Start again. Seats are mapped afresh and timers go to zero.</td></tr>
+          <tr><td><kbd>Z</kbd></td><td>Draw a zone (Shop and Home). Click each corner, press Enter, then pick the rule with a number key.</td></tr>
+          <tr><td><kbd>C</kbd></td><td>Clear all zones (Shop and Home).</td></tr>
+          <tr><td><kbd>P</kbd></td><td>Pause.</td></tr>
+          <tr><td><kbd>H</kbd></td><td>Show or hide the key hints.</td></tr>
+          <tr><td><kbd>F</kbd></td><td>Full screen.</td></tr>
+          <tr><td><kbd>X</kbd></td><td>Save a screenshot to <code>logs</code>.</td></tr>
+          <tr><td><kbd>Q</kbd></td><td>Quit.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="readout">The readout and the log</h2>
+      <p>The box in the bottom corner of the window shows what is running: the model, its input size, whether it is on the GPU or the CPU, the inference time for the last frame, the frame rate and the number of detections.</p>
+      <p>Every status change is written to a CSV file in <code>logs</code>, one file per session, with the clock time, the time into the stream, the source, the seat or zone, and what changed.</p>
+      <p>A program that cannot start writes the reason to <code>sentinel.log</code> in its folder.</p>
+
+      <h2 id="rules">Rules and thresholds</h2>
+      <p>A status is one rule applied to what the models found. The rules are the same ones the demo clips on the site were made with.</p>
+
+      <h3>Office</h3>
+      <table>
+        <thead><tr><th scope="col">Status</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><td>Working</td><td>A person is detected in the seat and no phone is detected in their hands. It means the person is at the desk.</td></tr>
+          <tr><td>Absent</td><td>No person in the seat for 0.75 seconds. Clears after 0.4 seconds back.</td></tr>
+          <tr><td>Phone usage</td><td>A phone is detected inside the person's outline, away from where phones were lying during the first second, for 0.35 seconds.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Zones (Shop and Home)</h3>
+      <table>
+        <thead><tr><th scope="col">Rule</th><th scope="col">Fires when</th></tr></thead>
+        <tbody>
+          <tr><td>Entry</td><td>A person, vehicle or pet, whichever the zone is set to, is inside for about a third of a second. The status stays up briefly after the zone empties.</td></tr>
+          <tr><td>Dwell</td><td>The same tracked person has been inside for 5 seconds.</td></tr>
+          <tr><td>Occupancy</td><td>More people than the limit are inside for 0.6 seconds.</td></tr>
+        </tbody>
+      </table>
+      <p>Zones you draw use the centre of each detected box. The zone files for the sample clips are in <code>zones</code>, and yours are saved there as <code>custom_shop.json</code> and <code>custom_home.json</code>.</p>
+
+      <h3>Exam</h3>
+      <ol>
+        <li>During the first second, each seated person becomes a seat with a desk zone around where their wrists rest and a baseline head direction.</li>
+        <li>Head direction is the line from the midpoint of the ears to the nose. Yaw is how far that line has turned from the candidate's own baseline, in degrees.</li>
+        <li>Past 38 degrees, the look has left the candidate's own paper. The target is the best-aligned desk within 30 degrees of the head direction and within seven shoulder-widths.</li>
+        <li>A phone counts when it is inside the candidate's outline or desk zone for 0.35 seconds.</li>
+      </ol>
+      <table>
+        <thead><tr><th scope="col">Risk score</th><th scope="col">Value</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Look hold</td><td>0.35 s</td><td>A look must last this long before it scores.</td></tr>
+          <tr><td>Look rate</td><td>42 a second</td><td>Added while the head points at another desk.</td></tr>
+          <tr><td>Decay</td><td>7 a second</td><td>Removed the rest of the time.</td></tr>
+          <tr><td>Phone</td><td>85</td><td>A phone at the desk lifts the score to at least this.</td></tr>
+          <tr><td>Review</td><td>25</td><td>Normal becomes Review.</td></tr>
+          <tr><td>Flagged</td><td>60</td><td>Review becomes Flagged.</td></tr>
+        </tbody>
+      </table>
+      <p>Looking up, or away at nothing, scores nothing. A flag is a prompt for an invigilator to check the footage at that time. The program makes no finding about what the candidate was doing.</p>
+
+      <h2 id="models">Model files</h2>
+      <p>The <code>models</code> folder holds four ONNX files. The same files are in the <a href="https://github.com/forgehk/sentinel-vision/tree/main/app/models">repository</a>.</p>
+      <table class="hashes">
+        <thead><tr><th scope="col">File</th><th scope="col">Size in bytes</th><th scope="col">SHA-256</th></tr></thead>
+        <tbody>
+          <tr><td>yolo26n.onnx</td><td>10,419,737</td><td class="hash">a772bebdb74762b8567986ac206a5ecafb27e481c572cfa41435e3300acc4642</td></tr>
+          <tr><td>yolo26s.onnx</td><td>38,769,190</td><td class="hash">2a0b6ac6d7d441fbc71c574af44f8694f62fda33e940078c16037c105268e01a</td></tr>
+          <tr><td>yolo26n-pose.onnx</td><td>12,534,179</td><td class="hash">b690600113b28104f1041c7467842f43bf122b4df1037d2a598129dacc3e8287</td></tr>
+          <tr><td>yolo26s-pose.onnx</td><td>42,267,783</td><td class="hash">209b1d2b54efc281e2980d40e9eedd638999517802cba1fcf5bc59e35d7968e6</td></tr>
+        </tbody>
+      </table>
+      <p>To check a file on Windows:</p>
+      <pre><code>certutil -hashfile models\yolo26s.onnx SHA256</code></pre>
+      <p>Each model takes one RGB image scaled to 0 to 1, at any width and height that are multiples of 32. The object models return 300 rows of box, confidence and class. The pose models return 300 rows of box, confidence and 17 keypoints. They are opset 17 exports of Ultralytics YOLO26 with its end-to-end head, so the rows are final detections.</p>
+
+      <h2 id="speed">Speed</h2>
+      <p>Inference time per frame on a 2-core 2.1 GHz Xeon with no graphics card:</p>
+      <table>
+        <thead><tr><th scope="col">Model and input</th><th scope="col">Office, Shop, Home</th><th scope="col">Exam</th></tr></thead>
+        <tbody>
+          <tr><td>Nano, 640 px</td><td>40 to 57 ms</td><td>94 ms</td></tr>
+          <tr><td>Nano, 1280 px</td><td>165 to 173 ms</td><td>380 ms</td></tr>
+          <tr><td>Small, 640 px</td><td>119 to 158 ms</td><td>256 ms</td></tr>
+          <tr><td>Small, 1280 px</td><td>463 to 553 ms</td><td>1,037 ms</td></tr>
+        </tbody>
+      </table>
+      <p>Exam is slower because it runs the pose model and the object model on every frame.</p>
+      <p>The program chooses the small model at 1280 pixels for a video file on a graphics card, and 640 pixels on a CPU or for a webcam, where people are close to the camera. <kbd>M</kbd>, <kbd>[</kbd> and <kbd>]</kbd> change that while it runs.</p>
+      <p>When the PC cannot keep up with a file, frames are dropped so the clip stays at real speed. The rules run on clip time, so events fire at the same moments either way.</p>
+
+      <h2 id="source">Source and build</h2>
+      <p>The source is at <a href="https://github.com/forgehk/sentinel-vision">github.com/forgehk/sentinel-vision</a>: the programs, the rules, the tests and the workflow that builds each release.</p>
+      <p>That workflow runs on GitHub's Windows machines. It runs the tests, builds the folder, starts each of the four programs on its sample clip and stops unless each one reports the expected events. Only then is the zip published, with its SHA-256. The <a href="https://github.com/forgehk/sentinel-vision/actions/workflows/release.yml">build log</a> is public.</p>
+      <p>To build it yourself, install Python 3.10 or newer, download the source and double-click <code>app\build_exe.bat</code>. To run it without building:</p>
+      <pre><code>cd app
+run.bat exam</code></pre>
+
+      <h2 id="limits">Limits</h2>
+      <ul>
+        <li>One person on a webcam cannot be flagged for looking at another desk, because there is no other desk. The yaw figure still moves and a phone still flags.</li>
+        <li>Head direction is measured in the picture from one camera. It reads a head turned sideways well, and a head tilted toward or away from the camera poorly. With the nose hidden, no direction is reported.</li>
+        <li>The gaze target is the best-aligned nearby desk. It is not a measurement of what the eyes are on.</li>
+        <li>Phones are small. The small model at 1280 pixels finds a phone held at a desk a few metres away. The nano model at 640 pixels usually does not.</li>
+        <li>Seats are learned from the first second. Press <kbd>R</kbd> to map them again after people have sat down.</li>
+        <li>The release check runs on a machine with no camera and no graphics card, so webcam input and GPU inference are not part of it.</li>
+      </ul>
+
+      <h2 id="licence">Licence</h2>
+      <p>Sentinel Vision is released under the GNU Affero General Public License v3.0. The YOLO26 models are from Ultralytics and carry the same licence. Closed-source commercial use of the models needs an Ultralytics Enterprise licence.</p>
+    </article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M14 2.5 24 8.25v11.5L14 25.5 4 19.75V8.25Z" stroke="#0e2a21" stroke-width="2.2" stroke-linejoin="round"/><path d="m9.2 14.3 3.4 3.4 6.2-7" stroke="#1b8a4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sentinel Vision
+    </a>
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/#app">Windows app</a>
+      <a href="/#engine">Under the hood</a>
+      <a href="/#use">Responsible use</a>
+      <a href="/#contact">Request a demo</a>
+      <a href="https://github.com/forgehk/sentinel-vision">GitHub</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

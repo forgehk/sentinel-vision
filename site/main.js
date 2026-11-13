@@ -240,23 +240,30 @@
     var canvas = $('tryCanvas'); if (!canvas) return;
     var ctx = canvas.getContext('2d'), runBtn = $('tryRun'), status = $('tryStatus'), table = $('tryTable'), tbody = $('tryRows'), file = $('tryFile');
     var image = null, place = null, detector = null, busy = false, kind = 'objects';
+    var camBtn = $('tryCam'), video = null, stream = null, live = false, L = null, rate = 0, lastDone = 0;
+    var LEVEL = { ok: '#22c55e', alert: '#ef4444', notice: '#fbbf24', muted: '#cbd5e1' };
+    /* The same thresholds as the desktop app and the pipeline (analyze.py, exam_analyze.py). */
+    var RULE = { ABSENT_AFTER: 0.75, PHONE_ON: 0.35, PHONE_WINDOW: 0.8, PHONE_OFF: 1.5, SHRINK: 0.10, CALIB: 1.0, SMOOTH: 0.35, YAW_GATE: 38 };
     var LIMBS = [[5, 7], [7, 9], [6, 8], [8, 10], [5, 6], [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [0, 1], [0, 2], [1, 3], [2, 4]];
     var MODEL_TEXT = { objects: { run: 'Run the detector', idle: 'The model is 10 MB and loads when you press the button.', ready: 'Press the button to run the detector on this frame.' },
                        pose: { run: 'Run the pose model', idle: 'The pose model is 12 MB and loads when you press the button.', ready: 'Press the button to run the pose model on this frame.' } };
     var COLORS = { person: '#22c55e', car: '#fbbf24', truck: '#fbbf24', bus: '#fbbf24', dog: '#22c55e', cat: '#22c55e' };
 
-    function draw(dets, progress) {
+    function draw(dets, progress, note) {
+      var src = live ? video : image;
       ctx.fillStyle = '#101614'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (!image) return;
-      ctx.drawImage(image, place.x, place.y, place.w, place.h);
+      if (!src) return;
+      ctx.drawImage(src, place.x, place.y, place.w, place.h);
       if (!dets) return;
-      var k = place.w / image.naturalWidth;
+      var k = place.w / (live ? video.videoWidth : image.naturalWidth);
       ctx.font = '700 20px Archivo, Arial, sans-serif'; ctx.textBaseline = 'middle';
       dets.forEach(function (d, i) {
         var u = Math.max(0, Math.min(1, progress * dets.length * 0.6 - i * 0.45)); if (u <= 0) return;
-        var x = place.x + d.x1 * k, y = place.y + d.y1 * k, w = (d.x2 - d.x1) * k, h = (d.y2 - d.y1) * k, col = COLORS[d.name] || '#f8f9f6';
+        var main = !!note && d === note.person, phone = !!note && d === note.phone;
+        var x = place.x + d.x1 * k, y = place.y + d.y1 * k, w = (d.x2 - d.x1) * k, h = (d.y2 - d.y1) * k;
+        var col = main ? LEVEL[note.level] : phone ? LEVEL.notice : COLORS[d.name] || '#f8f9f6';
         var cx = x + w / 2, cy = y + h / 2, ww = w * (0.6 + 0.4 * u), hh = h * (0.6 + 0.4 * u);
-        ctx.globalAlpha = u; ctx.lineWidth = d.kp ? 2 : 4; ctx.strokeStyle = col; ctx.strokeRect(cx - ww / 2, cy - hh / 2, ww, hh);
+        ctx.globalAlpha = u; ctx.lineWidth = main ? 5 : d.kp ? 2 : 4; ctx.strokeStyle = col; ctx.strokeRect(cx - ww / 2, cy - hh / 2, ww, hh);
         if (d.kp) {
           ctx.lineWidth = 3; ctx.strokeStyle = '#38bdf8'; ctx.lineCap = 'round';
           LIMBS.forEach(function (l, li) {
@@ -270,11 +277,16 @@
           });
           ctx.strokeStyle = col;
         }
-        var text = d.name.toUpperCase() + ' ' + Math.round(d.score * 100) + '%', tw = ctx.measureText(text).width + 16;
-        var ly = Math.max(0, cy - hh / 2 - 30);
-        ctx.fillStyle = col; ctx.fillRect(cx - ww / 2 - 2, ly, tw, 30);
-        ctx.fillStyle = '#0e2a21'; ctx.fillText(text, cx - ww / 2 + 6, ly + 16); ctx.globalAlpha = 1;
+        var text = main ? note.text : phone ? 'PHONE' : d.name.toUpperCase() + ' ' + Math.round(d.score * 100) + '%', tw = ctx.measureText(text).width + 16;
+        var ly = Math.max(place.y, cy - hh / 2 - 30), lx = Math.max(place.x, Math.min(place.x + place.w - tw, cx - ww / 2 - 2));
+        ctx.fillStyle = col; ctx.fillRect(lx, ly, tw, 30);
+        ctx.fillStyle = main && note.level === 'alert' ? '#ffffff' : '#0e2a21'; ctx.fillText(text, lx + 8, ly + 16); ctx.globalAlpha = 1;
       });
+      if (note && !note.person) {                                  // nobody in view: say so in the corner of the picture
+        var bw = ctx.measureText(note.text).width + 24;
+        ctx.fillStyle = LEVEL[note.level]; ctx.fillRect(place.x + 16, place.y + 16, bw, 36);
+        ctx.fillStyle = note.level === 'alert' ? '#ffffff' : '#0e2a21'; ctx.fillText(note.text, place.x + 28, place.y + 35);
+      }
     }
     function setImage(img) {
       image = img; var s = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
@@ -297,11 +309,14 @@
       });
       table.hidden = !dets.length;
     }
+    function ensure(using) {                                      // the module and the chosen model, fetched on first use
+      return (detector ? Promise.resolve(detector) : import('/detector.js').then(function (m) { detector = m; return m; }))
+        .then(function (m) { if (m.loaded(using)) return; say('Loading the model… 0%'); return m.load(using, function (p) { say('Loading the model… ' + Math.round(p * 100) + '%'); }); });
+    }
     function run() {
-      if (busy || !image) return; busy = true; runBtn.disabled = true;
+      if (busy || !image || live) return; busy = true; runBtn.disabled = true;
       var using = kind;
-      (detector ? Promise.resolve(detector) : import('/detector.js').then(function (m) { detector = m; return m; }))
-        .then(function (m) { if (m.loaded(using)) return; say('Loading the model… 0%'); return m.load(using, function (p) { say('Loading the model… ' + Math.round(p * 100) + '%'); }); })
+      ensure(using)
         .then(function () { say('Running…'); return detector.detect(using, image, image.naturalWidth, image.naturalHeight, 0.3); })
         .then(function (res) {
           var dets = res.dets, t0 = performance.now(), info = detector.info(using);
@@ -315,27 +330,119 @@
         .catch(function (err) { say('The detector could not start in this browser (' + (err && err.message ? err.message : 'unknown error') + ').', 'error'); })
         .then(function () { busy = false; runBtn.disabled = false; });
     }
+    /* ---- live camera: the same model on every frame, with the desk rule (objects) or head direction (pose) applied to the person in view */
+    function wrap(d) { return ((d + 180) % 360 + 360) % 360 - 180; }
+    function facing(kp) {                                        // nose relative to the midpoint of the ears, as in exam_analyze.py
+      var n = kp[0]; if (n[2] < 0.35) return null;
+      var le = kp[3], re = kp[4], mx = (le[0] + re[0]) / 2, my = (le[1] + re[1]) / 2;
+      var size = Math.max(Math.hypot(le[0] - re[0], le[1] - re[1]), 2 * Math.hypot(kp[1][0] - kp[2][0], kp[1][1] - kp[2][1]), 8);
+      return [(n[0] - mx) / size, (n[1] - my) / size];
+    }
+    function liveRules(using, dets, now) {
+      var S = L, dt = S.last ? Math.min(0.5, now - S.last) : 0; S.last = now;
+      var p = null; dets.forEach(function (d) { if (d.name === 'person' && !p) p = d; });        // detections arrive most confident first
+      if (using === 'objects') {
+        var phone = null;
+        if (p) {
+          var w = p.x2 - p.x1, h = p.y2 - p.y1, c = [p.x1 + w * RULE.SHRINK, p.y1 + h * RULE.SHRINK, p.x2 - w * RULE.SHRINK, p.y2 - h * RULE.SHRINK];
+          dets.forEach(function (q) { var qx = (q.x1 + q.x2) / 2, qy = (q.y1 + q.y2) / 2; if (q.name === 'cell phone' && !phone && qx >= c[0] && qx <= c[2] && qy >= c[1] && qy <= c[3]) phone = q; });
+          S.gone = 0;
+        } else S.gone += dt;
+        S.hist.push([now, !!phone, dt]); S.hist = S.hist.filter(function (x) { return now - x[0] <= RULE.PHONE_WINDOW; });
+        if (phone) S.phoneLast = now;
+        var evidence = S.hist.reduce(function (n, x) { return n + (x[1] ? x[2] : 0); }, 0), prev = S.status, status;
+        if (S.gone >= RULE.ABSENT_AFTER) status = 'ABSENT';
+        else if (!p) status = prev;
+        else if (prev === 'PHONE USAGE') status = now - S.phoneLast < RULE.PHONE_OFF ? 'PHONE USAGE' : 'WORKING';
+        else status = evidence >= RULE.PHONE_ON ? 'PHONE USAGE' : 'WORKING';
+        S.status = status;
+        return { person: p, phone: status === 'PHONE USAGE' ? phone : null, level: status === 'WORKING' ? 'ok' : 'alert', text: 'ID 1 · ' + status };
+      }
+      if (!p) return { person: null, level: 'muted', text: 'NO ONE IN VIEW' };
+      var f = facing(p.kp); if (!f) { S.f = null; return { person: p, level: 'muted', text: 'S1 · HEAD NOT VISIBLE' }; }
+      S.f = S.f ? [RULE.SMOOTH * f[0] + (1 - RULE.SMOOTH) * S.f[0], RULE.SMOOTH * f[1] + (1 - RULE.SMOOTH) * S.f[1]] : f;
+      var dir = Math.atan2(S.f[1], S.f[0]) * 180 / Math.PI;
+      if (S.base === null) {                                      // the first second sets this person's own baseline
+        if (!S.t0) S.t0 = now; S.dirs.push(dir);
+        if (now - S.t0 < RULE.CALIB) return { person: p, level: 'muted', text: 'S1 · MAPPING SEAT' };
+        S.dirs.sort(function (a, b) { return a - b; }); S.base = S.dirs[S.dirs.length >> 1];
+      }
+      var yaw = Math.round(wrap(dir - S.base)), away = Math.abs(yaw) >= RULE.YAW_GATE;
+      return { person: p, level: away ? 'notice' : 'ok', text: 'S1 · ' + (away ? 'LOOKING AWAY' : 'OWN PAPER') + ' · YAW ' + (yaw >= 0 ? '+' : '') + yaw + '°' };
+    }
+    function resetLive() { L = { last: 0, gone: 0, hist: [], phoneLast: -9, status: 'WORKING', f: null, base: null, dirs: [], t0: 0 }; rate = 0; lastDone = 0; }
+    function tick() {
+      if (!live) return;
+      if (busy || video.readyState < 2 || !video.videoWidth) { requestAnimationFrame(tick); return; }
+      busy = true; var using = kind;
+      ensure(using).then(function () { return detector.detect(using, video, video.videoWidth, video.videoHeight, 0.3); })
+        .then(function (res) {
+          if (!live) return;
+          if (using !== kind) { resetLive(); return; }            // the model was switched while this frame was running
+          var now = performance.now() / 1000, note = liveRules(using, res.dets, now), info = detector.info(using);
+          if (lastDone) { var inst = 1 / Math.max(0.001, now - lastDone); rate = rate ? 0.8 * rate + 0.2 * inst : inst; } lastDone = now;
+          draw(res.dets, 10, note); showRows(res.dets);
+          say(info.model + ', ' + Math.round(res.ms) + ' ms a frame' + (rate ? ', ' + rate.toFixed(rate < 10 ? 1 : 0) + ' frames a second' : '') + ' on this device. The picture is not uploaded or stored.');
+        })
+        .catch(function (err) { stopCam(); say('The model could not run on the camera in this browser (' + (err && err.message ? err.message : 'unknown error') + ').', 'error'); })
+        .then(function () { busy = false; if (live) requestAnimationFrame(tick); });
+    }
+    function startCam() {
+      if (live || busy) return;
+      say('Waiting for the camera…');
+      navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: false }).then(function (st) {
+        stream = st; video = document.createElement('video'); video.muted = true; video.playsInline = true; video.srcObject = st;
+        return video.play();
+      }).then(function () {
+        var s = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+        place = { w: video.videoWidth * s, h: video.videoHeight * s }; place.x = (canvas.width - place.w) / 2; place.y = (canvas.height - place.h) / 2;
+        live = true; resetLive(); camBtn.textContent = 'Stop the camera'; camBtn.setAttribute('aria-pressed', 'true'); runBtn.hidden = true;
+        document.querySelectorAll('.sample').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        canvas.setAttribute('aria-label', 'Live picture from your camera with detections drawn on it.');
+        requestAnimationFrame(tick);
+      }).catch(function () {
+        if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; video = null;
+        say('The camera did not open. Allow it in the browser to try this, or use a sample frame.', 'error');
+      });
+    }
+    function stopCam() {
+      if (!live && !stream) return;
+      live = false; if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; video = null;
+      camBtn.textContent = 'Run it live on your camera'; camBtn.setAttribute('aria-pressed', 'false'); runBtn.hidden = false; table.hidden = true;
+      canvas.setAttribute('aria-label', 'Sample camera frame. Detections are drawn on it after you run the detector.');
+      if (image) setImage(image);
+    }
+    if (camBtn && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      camBtn.hidden = false;
+      camBtn.addEventListener('click', function () { if (live) { stopCam(); say(MODEL_TEXT[kind].ready); } else startCam(); });
+      document.addEventListener('visibilitychange', function () { if (document.hidden && live) { stopCam(); say('The camera was stopped because the page went out of view.'); } });
+    }
+
     document.querySelectorAll('.sample').forEach(function (b) {
       b.addEventListener('click', function () {
+        stopCam();
         document.querySelectorAll('.sample').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
         loadImage(b.getAttribute('data-sample')); if (detector) say(MODEL_TEXT[kind].ready);
       });
     });
     file.addEventListener('change', function () {
       if (!file.files || !file.files[0]) return;
+      stopCam();
       document.querySelectorAll('.sample').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
       loadImage(URL.createObjectURL(file.files[0]), true); say('Your photo stays on this device. Press the button to run the model on it.');
     });
     document.querySelectorAll('.model-pick button').forEach(function (b) {
       b.addEventListener('click', function () {
-        if (busy || b.getAttribute('data-model') === kind) return; kind = b.getAttribute('data-model');
+        if ((busy && !live) || b.getAttribute('data-model') === kind) return; kind = b.getAttribute('data-model');
         document.querySelectorAll('.model-pick button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
-        runBtn.textContent = MODEL_TEXT[kind].run; table.hidden = true; draw(null);
+        runBtn.textContent = MODEL_TEXT[kind].run;
+        if (live) { resetLive(); return; }                          // the camera keeps running; the next frame uses the new model
+        table.hidden = true; draw(null);
         say(detector && detector.loaded(kind) ? MODEL_TEXT[kind].ready : MODEL_TEXT[kind].idle);
       });
     });
     runBtn.addEventListener('click', run);
     var initial = document.querySelector('.sample[aria-pressed="true"]'); if (initial) loadImage(initial.getAttribute('data-sample'));
-    window.__sentinelTry = { run: run, pick: function (k) { var b = document.querySelector('.model-pick [data-model="' + k + '"]'); if (b) b.click(); } };
+    window.__sentinelTry = { run: run, live: function () { return live; }, pick: function (k) { var b = document.querySelector('.model-pick [data-model="' + k + '"]'); if (b) b.click(); } };
   })();
 })();

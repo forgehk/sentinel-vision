@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sentinel Vision | Camera analytics for desks, shop floors and front doors</title>
-<meta name="description" content="Sentinel Vision runs on your own hardware and turns camera footage into plain, timestamped statuses: who is at their desk, which zone is over capacity, who is at the front door. People are counted, never identified. The detection and pose models run in your browser on the page.">
+<meta name="description" content="Sentinel Vision runs on your own hardware and turns camera footage into plain, timestamped statuses: who is at their desk, which zone is over capacity, who is at the front door. People are counted, never identified. The detection and pose models run in your browser on the page, and there is a Windows app to download.">
 <meta name="theme-color" content="#0e2a21">
 <link rel="canonical" href="https://sentinel-vision-demo.netlify.app/">
 <meta property="og:type" content="website">
@@ -32,7 +32,8 @@
       <a href="#statuses">What it reports</a>
       <a href="#floors">Where it works</a>
       <a href="#engine">Under the hood</a>
-      <a href="#deployment">Deployment</a>
+      <a href="#app">Windows app</a>
+      <a href="/docs/">Docs</a>
       <a class="button" href="#contact">Request a demo</a>
     </nav>
   </div>
@@ -47,7 +48,8 @@
         <p>Sentinel Vision runs on your own hardware and turns the footage you already record into plain, timestamped statuses. People are counted, never identified.</p>
         <div class="hero-actions">
           <a class="button" href="#contact">Request a demo</a>
-          <a class="button quiet" href="#engine">Run the detector yourself</a>
+          <a class="button quiet" href="#app">Download for Windows</a>
+          <a class="hero-link" href="#engine">Or run the models in your browser</a>
         </div>
       </div>
     </div>
@@ -210,7 +212,7 @@
     <div class="wrap">
       <div class="section-head">
         <h2>Under the hood</h2>
-        <p>The models behind the demos are on this page. Pick one and press the button. It downloads to your browser and runs on your device, and nothing you give it is uploaded.</p>
+        <p>The models behind the demos are on this page. Pick one and run it on a sample frame, a photo of your own or your camera. It downloads to your browser and runs on your device, and nothing you give it is uploaded.</p>
       </div>
 
       <div class="try">
@@ -230,6 +232,7 @@
           </div>
           <label class="own-image">Or use a photo of your own <input type="file" id="tryFile" accept="image/*"></label>
           <button type="button" class="button" id="tryRun">Run the detector</button>
+          <button type="button" class="button quiet" id="tryCam" aria-pressed="false" hidden>Run it live on your camera</button>
           <p class="try-status" id="tryStatus" role="status">The model is 10 MB and loads when you press the button.</p>
           <table class="raw" id="tryTable" hidden>
             <thead><tr><th scope="col">Class</th><th scope="col">Conf.</th><th scope="col">Box, pixels</th></tr></thead>
@@ -247,6 +250,25 @@
         <div><dt>Rules</dt><dd>Zone entry, dwell, occupancy limits, seat absence, phone in hand, head turn and gaze target. <span class="count" data-to="41">41</span> automated tests cover them.</dd></div>
         <div><dt>Check it</dt><dd>Download the raw detections behind each clip: <a href="/data/office.json" download>office</a>, <a href="/data/shop.json" download>shop floor</a>, <a href="/data/home.json" download>front yard</a>, <a href="/data/exam.json" download>exam hall</a>.</dd></div>
       </dl>
+
+      <div class="models">
+        <div class="models-head">
+          <h3>The model files</h3>
+          <p>These are ordinary ONNX files, the ones the Windows app loads. Download one, check its SHA-256 and open it in an ONNX viewer to see the network.</p>
+        </div>
+        <div class="table-scroll">
+          <table class="model-table">
+            <thead><tr><th scope="col">File</th><th scope="col">Finds</th><th scope="col">Weights</th><th scope="col">Size</th><th scope="col">Returns per frame</th><th scope="col">SHA-256 starts</th></tr></thead>
+            <tbody>
+              <tr><td><a href="https://github.com/forgehk/sentinel-vision/raw/main/app/models/yolo26n.onnx">yolo26n.onnx</a></td><td>Objects, 80 classes</td><td>2.4 million</td><td>10.4 MB</td><td>300 rows of box, confidence, class</td><td><code>a772bebdb74762b8</code></td></tr>
+              <tr><td><a href="https://github.com/forgehk/sentinel-vision/raw/main/app/models/yolo26s.onnx">yolo26s.onnx</a></td><td>Objects, 80 classes</td><td>9.5 million</td><td>38.8 MB</td><td>300 rows of box, confidence, class</td><td><code>2a0b6ac6d7d441fb</code></td></tr>
+              <tr><td><a href="https://github.com/forgehk/sentinel-vision/raw/main/app/models/yolo26n-pose.onnx">yolo26n-pose.onnx</a></td><td>People, 17 body keypoints each</td><td>2.9 million</td><td>12.5 MB</td><td>300 rows of box, confidence, 17 points</td><td><code>b690600113b28104</code></td></tr>
+              <tr><td><a href="https://github.com/forgehk/sentinel-vision/raw/main/app/models/yolo26s-pose.onnx">yolo26s-pose.onnx</a></td><td>People, 17 body keypoints each</td><td>10.4 million</td><td>42.3 MB</td><td>300 rows of box, confidence, 17 points</td><td><code>209b1d2b54efc281</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="models-foot">Input is one RGB image scaled to 0 to 1, at any width and height that are multiples of 32. Opset 17, exported from Ultralytics YOLO26 with its end-to-end head, so the rows are final detections and need no separate filtering step. The browser demo above uses 640-pixel exports of the two nano models. Full checksums are in the <a href="/docs/#models">documentation</a>.</p>
+      </div>
 
       <div class="evidence">
         <figure>
@@ -302,6 +324,41 @@ $ python exam_analyze.py detections.json states.json
    2.83s  S8  REVIEW -> FLAGGED  (looking at desk S9, risk 61)
    4.71s  S9  NORMAL -> FLAGGED  (phone at the desk, risk 85)</code></pre>
         </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="app">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Windows app</h2>
+        <p>The same models and rules as a desktop program. It plays your webcam or any video and annotates it as it runs, on your own PC.</p>
+      </div>
+      <div class="app-grid">
+        <div class="app-shots">
+          <figure class="app-shot">
+            <img src="/media/app-office.jpg" width="1920" height="1080" loading="lazy" alt="The office program on a raw clip of six desks. Four are outlined in green and labelled Working, an empty seat is red and labelled Absent, and a person holding a phone is labelled Phone usage. A box in the corner gives the model, input size, processor and time per frame.">
+            <figcaption>SentinelOffice</figcaption>
+          </figure>
+          <div class="app-thumbs">
+            <figure><img src="/media/app-shop.jpg" width="960" height="540" loading="lazy" alt="The shop program: three zones drawn over a supermarket, with the checkout queue zone in red."><figcaption>SentinelShop</figcaption></figure>
+            <figure><img src="/media/app-home.jpg" width="960" height="540" loading="lazy" alt="The home program: a driveway zone with a parked car in amber and a front path zone with a person in red."><figcaption>SentinelHome</figcaption></figure>
+            <figure><img src="/media/app-exam.jpg" width="960" height="540" loading="lazy" alt="The exam program: candidates outlined with head keypoints and desk zones, one of them flagged in red for looking at another desk."><figcaption>SentinelExam</figcaption></figure>
+          </div>
+          <p class="app-caption">One frame from each program, running on a clip with nothing drawn in it. The box in the corner is the program's own readout: the model, its input size, GPU or CPU, and how long the frame took.</p>
+        </div>
+        <div class="app-get">
+          <a class="button" href="https://github.com/forgehk/sentinel-vision/releases/latest/download/SentinelVision-windows-x64.zip">Download for Windows</a>
+          <dl class="app-meta">
+            <div><dt>Version</dt><dd>0.1.0, released 13 November 2026</dd></div>
+            <div><dt>Download</dt><dd>210 MB zip. Unzip it and double-click a program. Nothing is installed.</dd></div>
+            <div><dt>Needs</dt><dd>Windows 10 or 11, 64-bit. It runs on the CPU and uses a DirectX 12 graphics card when it can.</dd></div>
+            <div><dt>Inside</dt><dd>Four programs (Office, Shop, Home, Exam), the four ONNX models and a raw sample clip for each program.</dd></div>
+            <div><dt>SHA-256</dt><dd><code>4080591841529eb2948d3062764b212ad11abc34d08115569c29affcf4fc27ed</code></dd></div>
+          </dl>
+          <p class="app-note">Every release is built on GitHub's Windows machines. Before it is published, each program is started on its sample clip and has to report the expected events. <a href="https://github.com/forgehk/sentinel-vision/actions/workflows/release.yml">See the build log</a> or <a href="https://github.com/forgehk/sentinel-vision">read the source</a>.</p>
+          <p class="app-note">The <a href="/docs/">documentation</a> covers the keys, the rules and their thresholds, and the model files.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -381,9 +438,12 @@ $ python exam_analyze.py detections.json states.json
       <a href="#how">How it works</a>
       <a href="#floors">Where it works</a>
       <a href="#engine">Under the hood</a>
+      <a href="#app">Windows app</a>
+      <a href="/docs/">Docs</a>
       <a href="#deployment">Deployment</a>
       <a href="#use">Responsible use</a>
       <a href="#contact">Request a demo</a>
+      <a href="https://github.com/forgehk/sentinel-vision">GitHub</a>
     </nav>
     <p class="fine">© 2026 Sentinel Vision. The scenes on this page are simulated. The detections and statuses shown in them are model output from Ultralytics YOLO26.</p>
   </div>
