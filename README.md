@@ -2,11 +2,15 @@
 
 Camera analytics that turns footage into timestamped statuses: who is at their desk, which zone is over its limit, who is at the front door, whose head has turned toward another desk in an exam.
 
+**[Run the demo in a browser](https://sentinel-vision-demo.netlify.app)** · **[Download the Windows build](https://github.com/forgehk/sentinel-vision/releases/latest)**
+
+![The office demo. Six desks seen from above, each person boxed and labelled working, absent or phone usage, with a status panel in one corner and an alert bar along the bottom.](site/media/app-office.jpg)
+
+> **The footage is simulated.** It is generated video, and nobody in it is a real person. Every box, label and status drawn over it is the output of the detection models and the rules in this repository.
+
+**Status:** version 0.1.0, a demo with four working Windows apps. There is no accuracy evaluation on real footage yet: the clips show that the pipeline runs end to end, and they are not a benchmark. The timings under [Measured performance](#measured-performance) come from one two-core machine with no GPU.
+
 This repository holds the public site, the pipeline that produced the four demo clips shown on it, four live apps that run the same rules on a webcam or any video, and the tests.
-
-Live site: https://sentinel-vision-demo.netlify.app
-
-Windows build: https://github.com/forgehk/sentinel-vision/releases/latest
 
 [![Release](https://github.com/forgehk/sentinel-vision/actions/workflows/release.yml/badge.svg)](https://github.com/forgehk/sentinel-vision/actions/workflows/release.yml)
 
